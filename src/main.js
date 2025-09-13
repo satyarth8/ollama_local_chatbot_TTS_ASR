@@ -1,0 +1,69 @@
+import './style.css'
+import axios from 'axios'
+
+// Get DOM elements
+const chatBox = document.getElementById("chatBox")
+const submitButton = document.getElementById("submitBtn")
+const textArea = document.getElementById("textArea")
+
+// Local Ollama API endpoint
+const OLLAMA_API_URL = 'http://127.0.0.1:11434/api/generate';
+
+// Function to display chat messages
+function chatMessage(text, senderId) {
+  const msg = document.createElement("div")
+  msg.className = `p-2 flex flex-col ${(senderId === 'user') ? `items-end` : `items-start`} `
+  msg.innerHTML = `<div class="${(senderId === 'user') ? `bg-zinc-900` : ``} h-fit w-6/10 rounded-2xl p-3 font-bold ">
+          ${text} 
+        </div>`
+  chatBox.append(msg)
+}
+
+// Send prompt to Gemma model
+async function talkToGemma(prompt) {
+  console.log('You:', prompt);
+  console.log('Gemma is thinking...');
+  try {
+    const response = await axios.post(OLLAMA_API_URL, {
+      model: 'gemma3:1b', 
+      prompt: prompt,    
+      stream: false     
+    });
+
+    if (response.status !== 200) {
+      throw new Error('Response not fetched')
+    }
+    return response.data.response.trim()
+
+  } catch (error) {
+    console.error('Error communicating with Gemma:', error);
+    return "Error talking to Gemma."
+  }
+}
+
+// Handle submit button click
+submitButton.addEventListener('click', async () => {
+  let prompt = textArea.value
+  
+  if (prompt != ``) {
+    textArea.value = ``
+    try {
+      chatMessage(prompt, "user")
+      let gemmaResponse = await talkToGemma(prompt)
+      chatMessage(gemmaResponse, "bot")
+    } catch (error) {
+      chatMessage("Error Happened", "bot")
+    }
+  }
+})
+
+// Handle Enter key for submit
+textArea.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault(); 
+    submitButton.click(); 
+  }
+});
+
+// Initial bot message
+(() => { chatMessage("Hi there, gemma3:1b this side, How can I help?", "bot"); })();
