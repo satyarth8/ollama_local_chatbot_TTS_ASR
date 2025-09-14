@@ -1,5 +1,7 @@
 import './style.css'
 import axios from 'axios'
+import { streamAndPlayText } from './tts.js'
+
 
 // Get DOM elements
 const chatBox = document.getElementById("chatBox")
@@ -13,9 +15,18 @@ const OLLAMA_API_URL = 'http://127.0.0.1:11434/api/generate';
 function chatMessage(text, senderId) {
   const msg = document.createElement("div")
   msg.className = `p-2 flex flex-col ${(senderId === 'user') ? `items-end` : `items-start`} `
-  msg.innerHTML = `<div class="${(senderId === 'user') ? `bg-zinc-900` : ``} h-fit w-6/10 rounded-2xl p-3 font-bold ">
+  msg.innerHTML = `<div  class="${(senderId === 'user') ? `bg-zinc-900` : ``} h-fit w-6/10 rounded-2xl p-3 font-bold ">
           ${text} 
         </div>`
+  if (senderId === "bot") {
+    const ttsButton = document.createElement("div")
+    ttsButton.className = `cursor-pointer transition  transform hover:scale-125 hover:text-blue-600 pl-2 `
+    ttsButton.innerText = `🔊`
+    ttsButton.addEventListener("click", () => {
+        streamAndPlayText(text);
+    });
+    msg.append(ttsButton)
+  }
   chatBox.append(msg)
 }
 
@@ -25,9 +36,9 @@ async function talkToGemma(prompt) {
   console.log('Gemma is thinking...');
   try {
     const response = await axios.post(OLLAMA_API_URL, {
-      model: 'gemma3:1b', 
-      prompt: prompt,    
-      stream: false     
+      model: 'gemma3:1b',
+      prompt: prompt,
+      stream: false
     });
 
     if (response.status !== 200) {
@@ -44,7 +55,7 @@ async function talkToGemma(prompt) {
 // Handle submit button click
 submitButton.addEventListener('click', async () => {
   let prompt = textArea.value
-  
+
   if (prompt != ``) {
     textArea.value = ``
     try {
@@ -60,8 +71,8 @@ submitButton.addEventListener('click', async () => {
 // Handle Enter key for submit
 textArea.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault(); 
-    submitButton.click(); 
+    e.preventDefault();
+    submitButton.click();
   }
 });
 
