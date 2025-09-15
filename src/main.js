@@ -39,8 +39,13 @@ async function talkToGemma(prompt) {
   try {
     const response = await axios.post(OLLAMA_API_URL, {
       model: 'gemma3:1b',
-      prompt: `You are a helpful AI assistant. Always format your answers in **valid Markdown**. 
-For lists, use bullet points. You always keep your answer crisp, to the point , short,concise , coherent, concrete.  
+      prompt: `You are a helpful AI assistant.
+You must follow these rules:
+- Always answer directly in **valid Markdown** (no explanations about formatting).
+- Never repeat the same answer twice.
+- Never write phrases like "Here is the answer in Markdown" or "Valid Markdown".
+- Keep answers short, clear, and concise.
+- Use bullet points for lists, headings where appropriate, and code blocks for code.
 
 User: ${prompt}`,
       stream: false
