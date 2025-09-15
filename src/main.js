@@ -1,7 +1,7 @@
 import './style.css'
 import axios from 'axios'
 import { streamAndPlayText } from './tts.js'
-
+import { marked } from 'marked';
 
 // Get DOM elements
 const chatBox = document.getElementById("chatBox")
@@ -14,16 +14,18 @@ const OLLAMA_API_URL = 'http://127.0.0.1:11434/api/generate';
 // Function to display chat messages
 function chatMessage(text, senderId) {
   const msg = document.createElement("div")
-  msg.className = `p-2 flex flex-col ${(senderId === 'user') ? `items-end` : `items-start`} `
-  msg.innerHTML = `<div  class="${(senderId === 'user') ? `bg-zinc-900` : ``} h-fit w-6/10 rounded-2xl p-3 font-bold ">
-          ${text} 
-        </div>`
+  msg.className = `p-2 flex text-white font-sans font-normal color-white flex-col ${(senderId === 'user') ? `items-end` : `items-start`} `
+  msg.innerHTML = `
+  <div class="${senderId === 'user' ? 'bg-zinc-900' : ''} h-fit w-6/10 rounded-2xl p-3 font-bold">
+    ${senderId === 'bot' ? marked.parse(text) : text}
+  </div>
+`;
   if (senderId === "bot") {
     const ttsButton = document.createElement("div")
     ttsButton.className = `cursor-pointer transition  transform hover:scale-125 hover:text-blue-600 pl-2 `
     ttsButton.innerText = `🔊`
     ttsButton.addEventListener("click", () => {
-        streamAndPlayText(text);
+      streamAndPlayText(text);
     });
     msg.append(ttsButton)
   }
@@ -37,7 +39,10 @@ async function talkToGemma(prompt) {
   try {
     const response = await axios.post(OLLAMA_API_URL, {
       model: 'gemma3:1b',
-      prompt: prompt,
+      prompt: `You are a helpful AI assistant. Always format your answers in **valid Markdown**. 
+For lists, use bullet points. You always keep your answer crisp, to the point , short,concise , coherent, concrete.  
+
+User: ${prompt}`,
       stream: false
     });
 
